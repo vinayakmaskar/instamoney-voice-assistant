@@ -287,6 +287,54 @@ Copy `secrets.json.example` to `secrets.json` and fill in:
 
 ---
 
+## Cloud Run Deployment
+
+The backend is designed to deploy on **Google Cloud Run** with a single command.
+
+### Prerequisites
+
+- [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) (`gcloud` CLI)
+- Docker (for local builds, optional — Cloud Build handles remote builds)
+- A GCP project with billing enabled
+
+### Deploy
+
+```bash
+# Authenticate with GCP
+gcloud auth login
+gcloud config set project YOUR_PROJECT_ID
+
+# Run the deployment script
+./deploy.sh
+```
+
+The script will:
+1. Enable required GCP APIs (Cloud Run, Container Registry, Cloud Build, Secret Manager)
+2. Upload `secrets.json` to Secret Manager
+3. Build the Docker container via Cloud Build
+4. Deploy to Cloud Run with WebSocket support (Daphne ASGI server)
+5. Print the live backend URL and WebSocket endpoint
+
+### What gets deployed
+
+| Component | Detail |
+|-----------|--------|
+| **Container** | Python 3.11-slim + Daphne on port 8080 |
+| **Secrets** | `secrets.json` mounted via Secret Manager |
+| **Scaling** | 0–3 instances, 512 MB RAM, 1 vCPU |
+| **Region** | `asia-south1` (Mumbai) |
+| **WebSockets** | Fully supported on Cloud Run (300s timeout) |
+
+### Update the frontend
+
+After deployment, update the WebSocket URL in `frontend/src/components/VoiceChatbot.js`:
+
+```javascript
+const WS_URL = 'wss://YOUR-SERVICE-URL.run.app/ws/voice-chat/';
+```
+
+---
+
 ## Team
 
 - **Vinayak Maskar** — [GitHub](https://github.com/vinayakmaskar)

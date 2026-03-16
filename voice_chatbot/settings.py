@@ -36,6 +36,11 @@ ALLOWED_HOSTS = SECRETS.get('ALLOWED_HOSTS', os.environ.get('ALLOWED_HOSTS', 'lo
 if isinstance(ALLOWED_HOSTS, str):
     ALLOWED_HOSTS = ALLOWED_HOSTS.split(',')
 
+# Cloud Run sets this; allow all *.run.app domains
+if os.environ.get('K_SERVICE'):
+    ALLOWED_HOSTS = ['*']
+    DEBUG = False
+
 
 # Application definition
 
@@ -129,6 +134,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

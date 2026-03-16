@@ -1,0 +1,51 @@
+# Version control
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*.egg-info
+venv/
+env/
+.venv/
+
+# Frontend (deployed separately)
+frontend/
+
+# IDE
+.idea/
+.vscode/
+.cursor/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dev files
+backups/
+*.md
+*.log
+test_*.py
+test_*.sh
+tests/
+analyze_logs.py
+check_servers.py
+run_tests.py
+generate_secrets.py
+generate_test_token.py
+quick_start.sh
+start_servers.sh
+database_export.txt
+test_output.log
+frontend.log
+test_websocket_connection.html
+
+# DB (will use Cloud SQL or fresh SQLite in container)
+db.sqlite3
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
