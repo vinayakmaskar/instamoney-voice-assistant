@@ -171,23 +171,12 @@ class VoiceChatbotConsumer(AsyncWebsocketConsumer):
                             bot_text = None
                             user_text = None
                             
-                            # Extract data from message (NO HEAVY LOGGING)
-                            
-                            # 🛠️ ENHANCED DEBUG: Log message attributes to understand structure
-                            msg_attrs = [attr for attr in dir(message) if not attr.startswith('_')]
-                            if 'tool_call' in msg_attrs or 'function_call' in msg_attrs:
-                                print(f"🔍 [DEBUG] Message has attributes: {msg_attrs}")
-                            
-                            # 🛠️ DEBUG: Check for tool_call at message level (as per user's example)
+                            # Check for tool_call at message level
                             if hasattr(message, 'tool_call') and message.tool_call:
-                                print(f"🛠️ [DEBUG] Detected tool_call at MESSAGE level!")
-                                print(f"🛠️ [DEBUG] tool_call type: {type(message.tool_call)}")
+                                print(f"🛠️ Detected tool_call at message level: {message.tool_call}")
                                 if hasattr(message.tool_call, 'function_calls'):
-                                    print(f"🛠️ [DEBUG] function_calls count: {len(message.tool_call.function_calls)}")
                                     for fc in message.tool_call.function_calls:
                                         await self._handle_tool_call(fc)
-                                else:
-                                    print(f"🛠️ [DEBUG] tool_call has no function_calls attribute!")
                             
                             if hasattr(message, 'server_content') and message.server_content:
                                 sc = message.server_content

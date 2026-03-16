@@ -292,11 +292,15 @@ const VoiceChatbot = ({ onFormUpdate, onValidationResult }) => {
   
   const stopBotPlayback = () => {
     console.log('🛑 [STOP] Stopping bot playback...');
-    const queueSize = audioQueueRef.current.length;
     audioQueueRef.current = [];
     isPlayingRef.current = false;
     nextPlayTimeRef.current = 0;
-    console.log(`✅ [BARGE-IN] Cleared ${queueSize} queued chunks`);
+    if (audioContextRef.current) {
+      const ctx = audioContextRef.current;
+      audioContextRef.current = null;
+      ctx.close().catch(() => {});
+    }
+    console.log('✅ [BARGE-IN] Playback stopped, context reset');
   };
   
   const handleAudioChunk = (audioData) => {
@@ -318,27 +322,13 @@ const VoiceChatbot = ({ onFormUpdate, onValidationResult }) => {
   
   const playNextAudio = useCallback(() => {
     isPlayingRef.current = false;
-    
-    if (audioQueueRef.current.length > 0) {
-      const nextSource = audioQueueRef.current.shift();
-      isPlayingRef.current = true;
-      nextSource.onended = playNextAudio;
-      
-      try {
-        nextSource.start(0);
-      } catch (e) {
-        console.error('❌ [QUEUE] Error playing next chunk:', e);
-        playNextAudio();
-      }
-    }
   }, []);
   
   const playPCMAudioChunk = useCallback(async (pcmChunk) => {
     try {
-      audioChunksPlayedRef.current++;
-      const chunkNum = audioChunksPlayedRef.current;
+      if (!pcmChunk || pcmChunk.byteLength < 100) return;
       
-      if (!pcmChunk || pcmChunk.byteLength === 0 || pcmChunk.byteLength < 100) return;
+      audioChunksPlayedRef.current++;
       
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)({
@@ -356,6 +346,7 @@ const VoiceChatbot = ({ onFormUpdate, onValidationResult }) => {
       
       const sampleRate = 24000;
       const frameCount = pcmChunk.byteLength / 2;
+      const duration = frameCount / sampleRate;
       
       const audioBuffer = audioContext.createBuffer(1, frameCount, sampleRate);
       const channelData = audioBuffer.getChannelData(0);
@@ -369,24 +360,22 @@ const VoiceChatbot = ({ onFormUpdate, onValidationResult }) => {
       source.buffer = audioBuffer;
       source.connect(audioContext.destination);
       
-      const wasPlaying = isPlayingRef.current;
+      const now = audioContext.currentTime;
+      const startTime = Math.max(now, nextPlayTimeRef.current);
       
-      if (wasPlaying) {
-        source.onended = playNextAudio;
-        audioQueueRef.current.push(source);
-      } else {
-        isPlayingRef.current = true;
-        source.onended = playNextAudio;
-        try {
-          source.start(0);
-        } catch (startError) {
+      source.start(startTime);
+      nextPlayTimeRef.current = startTime + duration;
+      
+      isPlayingRef.current = true;
+      source.onended = () => {
+        if (audioContextRef.current && nextPlayTimeRef.current <= audioContextRef.current.currentTime + 0.02) {
           isPlayingRef.current = false;
         }
-      }
+      };
     } catch (error) {
       isPlayingRef.current = false;
     }
-  }, [playNextAudio]);
+  }, []);
 
   const playAccumulatedAudio = () => {
     if (Platform.OS === 'web' && audioChunksRef.current.length > 0) {

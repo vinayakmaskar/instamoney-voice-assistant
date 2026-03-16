@@ -39,7 +39,7 @@ class LoanAssistantAgent:
                 instruction=self.instruction,
                 tools=[],  # No validation tools
             )
-        except Exception as e:
+        except Exception as e:  
             print(f"Warning: Could not create ADK Agent: {e}")
             self.agent = None
         
@@ -85,14 +85,14 @@ class LoanAssistantAgent:
         🎯 **INITIAL GREETING** 🎯
         ============================================
         When the session starts (you receive "start" message), greet the user with this exact message:
-
-        📢 DEFAULT GREETING (Hindi):
-        "नमस्ते! InstaMoney में आपका स्वागत है। मैं आपका बेसिक डिटेल्स फॉर्म भरने में मदद करूंगा। आपका नाम क्या है?"
-
-        📢 OTHER LANGUAGE GREETINGS (if needed):
-        - English: "Hello! Welcome to InstaMoney. I'm here to help you fill out your Basic Details form. What's your full name?"
+        
+        📢 DEFAULT GREETING (English):
+        "Hello! Welcome to InstaMoney. I'm here to help you fill out your Basic Details form. What's your full name?"
+        
+        📢 MULTILINGUAL GREETINGS:
+        - Hindi: "नमस्ते! InstaMoney में आपका स्वागत है। मैं आपका बेसिक डिटेल्स फॉर्म भरने में मदद करूंगा। आपका नाम क्या है?"
         - Marathi: "नमस्कार! InstaMoney मध्ये आपले स्वागत आहे। मी तुमचा बेसिक डिटेल्स फॉर्म भरण्यात मदत करेन। तुमचे नाव काय आहे?"
-
+        
         🚨 Keep it brief - just welcome + purpose + ask for name
         ============================================
         
@@ -403,26 +403,24 @@ class LoanAssistantAgent:
             )]
             
             config_dict = {
-                "response_modalities": ["AUDIO"],  # Audio-only mode
+                "response_modalities": ["AUDIO"],
                 "speech_config": {
                     "voice_config": {
                         "prebuilt_voice_config": {
-                            "voice_name": "Puck"  # More neutral voice
+                            "voice_name": "Puck"
                         }
                     }
-                    # No language_code - let Gemini auto-detect from user's speech
                 },
                 "generation_config": {
-                    "temperature": 0.4,  # Balanced temperature for consistent tool calling with natural responses
+                    "temperature": 0.1,
                     "candidate_count": 1,
                 },
                 "system_instruction": {
                     "parts": [{"text": self.instruction}]
                 },
-                # ✅ Enable transcription for both user input and bot output
-                "input_audio_transcription": {},   # Transcribe user's speech
-                "output_audio_transcription": {},  # Transcribe bot's speech
-                "tools": tools,  # Register tools
+                "input_audio_transcription": {},
+                "output_audio_transcription": {},
+                "tools": tools,
             }
             
             print(f"🔄 Connecting to Gemini Live API...")
@@ -464,7 +462,6 @@ class LoanAssistantAgent:
             )
             
             await self.live_session.send_realtime_input(audio=audio_blob)
-            print(f"📤 Sent PCM audio chunk ({len(audio_bytes)} bytes) to Live API")
             
         except Exception as e:
             print(f"❌ Error sending audio to Live API: {e}")
