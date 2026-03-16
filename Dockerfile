@@ -2,6 +2,7 @@ FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
 
 WORKDIR /app
 
@@ -14,6 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+RUN ls -la voice_chatbot/ && python -c "import voice_chatbot.asgi"
 RUN python manage.py collectstatic --noinput 2>/dev/null || true
 RUN python manage.py migrate --noinput 2>/dev/null || true
 

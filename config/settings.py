@@ -8,15 +8,18 @@ from pathlib import Path
 
 # Load secrets from secrets.json
 def _load_secrets():
-    """Load secrets from secrets.json file."""
-    try:
-        project_root = Path(__file__).resolve().parent.parent
-        secrets_file = project_root / 'secrets.json'
-        if secrets_file.exists():
-            with open(secrets_file, 'r') as f:
-                return json.load(f)
-    except Exception:
-        pass
+    """Load secrets from secrets.json file. Checks multiple paths for Cloud Run compatibility."""
+    search_paths = [
+        Path(__file__).resolve().parent.parent / 'secrets.json',
+        Path('/secrets/secrets.json'),
+    ]
+    for secrets_file in search_paths:
+        try:
+            if secrets_file.exists():
+                with open(secrets_file, 'r') as f:
+                    return json.load(f)
+        except Exception:
+            continue
     return {}
 
 SECRETS = _load_secrets()

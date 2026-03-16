@@ -9,18 +9,18 @@ import json
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load secrets from secrets.json
-try:
-    secrets_file = BASE_DIR / 'secrets.json'
-    if secrets_file.exists():
-        with open(secrets_file, 'r') as f:
-            SECRETS = json.load(f)
-    else:
-        SECRETS = {}
-        print("Warning: secrets.json not found. Using environment variables.")
-except Exception as e:
-    SECRETS = {}
-    print(f"Warning: Could not load secrets.json: {e}. Using environment variables.")
+# Load secrets from secrets.json (check multiple paths for Cloud Run)
+SECRETS = {}
+for _secrets_path in [BASE_DIR / 'secrets.json', Path('/secrets/secrets.json')]:
+    try:
+        if _secrets_path.exists():
+            with open(_secrets_path, 'r') as f:
+                SECRETS = json.load(f)
+            break
+    except Exception:
+        continue
+if not SECRETS:
+    print("Warning: secrets.json not found. Using environment variables.")
 
 
 # Quick-start development settings - unsuitable for production
