@@ -157,6 +157,7 @@ class VoiceChatbotConsumer(AsyncWebsocketConsumer):
         print("🔄 Starting continuous response receiver...")
         message_count = 0
         audio_chunks_sent = 0
+        suppress_post_tool_audio = False
         
         try:
             while self.is_streaming and self.agent and self.agent.live_session:
@@ -171,7 +172,8 @@ class VoiceChatbotConsumer(AsyncWebsocketConsumer):
                             
                             # Check for tool_call at message level
                             if hasattr(message, 'tool_call') and message.tool_call:
-                                print(f"🛠️ Detected tool_call at message level: {message.tool_call}")
+                                print(f"🛠️ Detected tool_call at message level")
+                                suppress_post_tool_audio = True
                                 if hasattr(message.tool_call, 'function_calls'):
                                     for fc in message.tool_call.function_calls:
                                         await self._handle_tool_call(fc)
@@ -209,6 +211,8 @@ class VoiceChatbotConsumer(AsyncWebsocketConsumer):
                                 
                                 # Check for turn completion
                                 if hasattr(sc, 'generation_complete') and sc.generation_complete:
+                                    if suppress_post_tool_audio:
+                                        suppress_post_tool_audio = False
                                     # Save any remaining buffers
                                     if self.user_transcript_buffer:
                                         await self._save_user_turn()
@@ -248,17 +252,15 @@ class VoiceChatbotConsumer(AsyncWebsocketConsumer):
                                 if self.bot_transcript_buffer:
                                     await self._save_bot_turn(interrupted=True)
                             
-                            # Send audio if found
-                            if audio_data:
+                            # Send audio if found (skip duplicate post-tool audio)
+                            if audio_data and not suppress_post_tool_audio:
                                 audio_chunks_sent += 1
-                                # Log first response with timestamp
                                 if audio_chunks_sent == 1 and hasattr(self, '_first_audio_time'):
                                     response_time = datetime.now()
                                     delay = (response_time - self._first_audio_time).total_seconds()
                                     print(f"⏱️  [T1] FIRST Gemini response at {response_time.strftime('%H:%M:%S.%f')[:-3]} (delay: {delay:.2f}s)")
                                 try:
                                     await self.send(bytes_data=audio_data)
-                                    # Log only occasionally to reduce overhead
                                     if audio_chunks_sent <= 3 or audio_chunks_sent % 20 == 0:
                                         print(f"🔊 [{audio_chunks_sent}] Sent audio: {len(audio_data)} bytes")
                                 except Exception as e:

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InstaMoney — Architecture Diagram</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a14;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: #f1f5f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px;
+  }
+  .container {
+    width: 1200px;
+    background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+    border-radius: 24px;
+    padding: 48px;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  }
+  .title {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .title h1 {
+    font-size: 28px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 6px;
+  }
+  .title p {
+    font-size: 14px;
+    color: rgba(241,245,249,0.5);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .layers {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .layer {
+    border-radius: 16px;
+    padding: 24px 28px;
+    position: relative;
+  }
+  .layer-frontend {
+    background: rgba(102, 126, 234, 0.08);
+    border: 1px solid rgba(102, 126, 234, 0.25);
+  }
+  .layer-backend {
+    background: rgba(118, 75, 162, 0.08);
+    border: 1px solid rgba(118, 75, 162, 0.25);
+  }
+  .layer-gcloud {
+    background: rgba(52, 211, 153, 0.08);
+    border: 1px solid rgba(52, 211, 153, 0.25);
+  }
+  .layer-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .layer-frontend .layer-label { color: #667eea; }
+  .layer-backend .layer-label { color: #a855f7; }
+  .layer-gcloud .layer-label { color: #34d399; }
+  .badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+  .badge-expo {
+    background: rgba(102,126,234,0.2);
+    color: #667eea;
+  }
+  .badge-django {
+    background: rgba(168,85,247,0.2);
+    color: #a855f7;
+  }
+  .badge-gemini {
+    background: rgba(52,211,153,0.2);
+    color: #34d399;
+  }
+  .components {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .component {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 16px 20px;
+    flex: 1;
+    min-width: 140px;
+  }
+  .component h3 {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .component p {
+    font-size: 11px;
+    color: rgba(241,245,249,0.5);
+    line-height: 1.5;
+  }
+  .icon { font-size: 16px; }
+  .arrow-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 4px 0;
+    position: relative;
+  }
+  .arrow-label {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 11px;
+    color: rgba(241,245,249,0.6);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .arrow-icon {
+    font-size: 16px;
+  }
+  .flow-row {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+  }
+  .flow-col-main { flex: 3; }
+  .flow-col-side { flex: 1; }
+  .tech-tag {
+    display: inline-block;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.06);
+    color: rgba(241,245,249,0.4);
+    margin-top: 6px;
+    margin-right: 4px;
+  }
+  .highlight {
+    color: #667eea;
+    font-weight: 600;
+  }
+  .highlight-purple { color: #a855f7; }
+  .highlight-green { color: #34d399; }
+  .footer {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 11px;
+    color: rgba(241,245,249,0.3);
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="title">
+    <h1>InstaMoney — System Architecture</h1>
+    <p>Gemini Live Agent Challenge &bull; Voice-Powered Loan Application</p>
+  </div>
+
+  <div class="layers">
+
+    <!-- FRONTEND LAYER -->
+    <div class="layer layer-frontend">
+      <div class="layer-label">
+        <span class="icon">🖥️</span> Frontend — User's Browser
+        <span class="badge badge-expo">React Native / Expo Web</span>
+      </div>
+      <div class="components">
+        <div class="component">
+          <h3><span class="icon">🎙️</span> Microphone Capture</h3>
+          <p>Web Audio API captures <span class="highlight">PCM 16-bit 24kHz mono</span> audio in real-time. Frontend VAD detects silence for turn-taking.</p>
+          <span class="tech-tag">Web Audio API</span>
+          <span class="tech-tag">AudioWorklet</span>
+        </div>
+        <div class="component">
+          <h3><span class="icon">🔘</span> Voice Button + UI</h3>
+          <p>Animated FAB with pulsing ripple effects, waveform bars during recording, glassmorphism status cards.</p>
+          <span class="tech-tag">React Native</span>
+          <span class="tech-tag">Animated API</span>
+        </div>
+        <div class="component">
+          <h3><span class="icon">📝</span> Auto-Fill Form</h3>
+          <p>5 fields (Name, PAN, DOB, State, Language) auto-filled from speech with green animations + checkmarks.</p>
+          <span class="tech-tag">Floating Labels</span>
+          <span class="tech-tag">Icons</span>
+        </div>
+        <div class="component">
+          <h3><span class="icon">🔊</span> Audio Playback</h3>
+          <p>Queue-based PCM playback system. Supports <span class="highlight">barge-in</span> — user can interrupt bot mid-speech.</p>
+          <span class="tech-tag">AudioBuffer</span>
+          <span class="tech-tag">PCM Queue</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ARROW -->
+    <div class="arrow-section">
+      <div class="arrow-label">
+        <span class="arrow-icon">⬆⬇</span>
+        <strong>WebSocket</strong> — Binary PCM audio ↕ JSON messages — JWT subprotocol auth
+      </div>
+    </div>
+
+    <!-- BACKEND LAYER -->
+    <div class="layer layer-backend">
+      <div class="layer-label">
+        <span class="icon">⚙️</span> Backend — Google Cloud Run
+        <span class="badge badge-django">Django Channels + Daphne ASGI</span>
+      </div>
+      <div class="flow-row">
+        <div class="flow-col-main">
+          <div class="components">
+            <div class="component">
+              <h3><span class="icon">🔐</span> JWT Auth</h3>
+              <p>Token validated on WebSocket handshake via subprotocol. Rate limiting per user.</p>
+              <span class="tech-tag">PyJWT</span>
+              <span class="tech-tag">security.py</span>
+            </div>
+            <div class="component">
+              <h3><span class="icon">🔄</span> WebSocket Consumer</h3>
+              <p><span class="highlight-purple">VoiceChatbotConsumer</span> routes binary audio to Gemini, JSON messages to frontend. Auto-reconnect (3 retries).</p>
+              <span class="tech-tag">Django Channels</span>
+              <span class="tech-tag">asyncio</span>
+            </div>
+            <div class="component">
+              <h3><span class="icon">🛠️</span> Tool Call Handler</h3>
+              <p>Processes <span class="highlight-purple">fill_form_field()</span> function calls from Gemini. Validates data, sends form_suggestion to frontend.</p>
+              <span class="tech-tag">LiveClientToolResponse</span>
+            </div>
+          </div>
+          <div class="components" style="margin-top: 12px;">
+            <div class="component">
+              <h3><span class="icon">🤖</span> LoanAssistantAgent</h3>
+              <p>Core agent using <span class="highlight-purple">Google GenAI SDK</span>. System prompt with form field definitions, language rules, tool declarations. Manages Live API session lifecycle.</p>
+              <span class="tech-tag">google-genai</span>
+              <span class="tech-tag">google-adk</span>
+              <span class="tech-tag">adk_agent.py</span>
+            </div>
+            <div class="component">
+              <h3><span class="icon">📡</span> Continuous Receiver</h3>
+              <p>Background <span class="highlight-purple">asyncio.create_task</span> loop continuously reads audio + transcripts from Gemini Live session.</p>
+              <span class="tech-tag">asyncio.timeout</span>
+              <span class="tech-tag">streaming</span>
+            </div>
+          </div>
+        </div>
+        <div class="flow-col-side">
+          <div class="component" style="height: 100%;">
+            <h3><span class="icon">💾</span> Storage</h3>
+            <p>SQLite DB stores sessions, conversations, transcripts. Django ORM for async DB operations.</p>
+            <br>
+            <p style="margin-top: 8px;"><span class="highlight-purple">Models:</span></p>
+            <p>• Session</p>
+            <p>• Message</p>
+            <p>• Transcript</p>
+            <span class="tech-tag">SQLite</span>
+            <span class="tech-tag">Django ORM</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ARROW -->
+    <div class="arrow-section">
+      <div class="arrow-label">
+        <span class="arrow-icon">⬆⬇</span>
+        <strong>Gemini Live API</strong> — bidiGenerateContent — Streaming PCM audio ↕ Tool calls ↕ Transcripts
+      </div>
+    </div>
+
+    <!-- GOOGLE CLOUD LAYER -->
+    <div class="layer layer-gcloud">
+      <div class="layer-label">
+        <span class="icon">☁️</span> Google Cloud Platform
+        <span class="badge badge-gemini">Gemini 2.5 Flash Native Audio</span>
+      </div>
+      <div class="components">
+        <div class="component">
+          <h3><span class="icon">🧠</span> Gemini Live API</h3>
+          <p>Real-time <span class="highlight-green">bidiGenerateContent</span> streaming. Speech-to-speech with native function calling. Understands 10 Indian languages.</p>
+          <span class="tech-tag">Live API</span>
+          <span class="tech-tag">Tool Calling</span>
+          <span class="tech-tag">Multilingual</span>
+        </div>
+        <div class="component">
+          <h3><span class="icon">🚀</span> Cloud Run</h3>
+          <p>Serverless container hosting. Daphne ASGI on port 8080. WebSocket support with 300s timeout. Auto-scales 0→3 instances.</p>
+          <span class="tech-tag">asia-south1</span>
+          <span class="tech-tag">512MB / 1vCPU</span>
+        </div>
+        <div class="component">
+          <h3><span class="icon">🏗️</span> Cloud Build</h3>
+          <p>Automated Docker image build from source. Triggered by deploy.sh script.</p>
+          <span class="tech-tag">Dockerfile</span>
+          <span class="tech-tag">IaC</span>
+        </div>
+        <div class="component">
+          <h3><span class="icon">🔑</span> Secret Manager</h3>
+          <p>Stores secrets.json securely. Mounted into Cloud Run container at runtime.</p>
+          <span class="tech-tag">app-secrets</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    Built for the Gemini Live Agent Challenge &bull; Category: Live Agents &bull; By Vinayak Maskar
+  </div>
+</div>
+
+</body>
+</html>

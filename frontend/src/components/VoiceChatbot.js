@@ -289,30 +289,22 @@ const VoiceChatbot = ({ onFormUpdate, onValidationResult }) => {
 
   const audioChunksReceivedRef = useRef(0);
   const nextPlayTimeRef = useRef(0);
-  
+  const activeSourcesRef = useRef([]);
+
   const stopBotPlayback = () => {
-    console.log('🛑 [STOP] Stopping bot playback...');
+    activeSourcesRef.current.forEach(s => {
+      try { s.stop(); } catch(e) {}
+      try { s.disconnect(); } catch(e) {}
+    });
+    activeSourcesRef.current = [];
     audioQueueRef.current = [];
     isPlayingRef.current = false;
     nextPlayTimeRef.current = 0;
-    if (audioContextRef.current) {
-      const ctx = audioContextRef.current;
-      audioContextRef.current = null;
-      ctx.close().catch(() => {});
-    }
-    console.log('✅ [BARGE-IN] Playback stopped, context reset');
   };
   
   const handleAudioChunk = (audioData) => {
     audioChunksReceivedRef.current++;
-    const chunkNum = audioChunksReceivedRef.current;
-    
     if (!audioData || audioData.byteLength === 0) return;
-    
-    if (chunkNum <= 3 || chunkNum % 10 === 0) {
-      console.log(`📥 [RECV #${chunkNum}] ${audioData.byteLength} bytes`);
-    }
-    
     if (Platform.OS === 'web') {
       playPCMAudioChunk(audioData);
     }
@@ -323,11 +315,10 @@ const VoiceChatbot = ({ onFormUpdate, onValidationResult }) => {
   const playNextAudio = useCallback(() => {
     isPlayingRef.current = false;
   }, []);
-  
+
   const playPCMAudioChunk = useCallback(async (pcmChunk) => {
     try {
       if (!pcmChunk || pcmChunk.byteLength < 100) return;
-      
       audioChunksPlayedRef.current++;
       
       if (!audioContextRef.current) {
@@ -341,7 +332,6 @@ const VoiceChatbot = ({ onFormUpdate, onValidationResult }) => {
       if (audioContext.state === 'suspended') {
         await audioContext.resume();
       }
-      
       if (audioContext.state !== 'running') return;
       
       const sampleRate = 24000;
@@ -366,9 +356,12 @@ const VoiceChatbot = ({ onFormUpdate, onValidationResult }) => {
       source.start(startTime);
       nextPlayTimeRef.current = startTime + duration;
       
+      activeSourcesRef.current.push(source);
       isPlayingRef.current = true;
+      
       source.onended = () => {
-        if (audioContextRef.current && nextPlayTimeRef.current <= audioContextRef.current.currentTime + 0.02) {
+        activeSourcesRef.current = activeSourcesRef.current.filter(s => s !== source);
+        if (activeSourcesRef.current.length === 0) {
           isPlayingRef.current = false;
         }
       };

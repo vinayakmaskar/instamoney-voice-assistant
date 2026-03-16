@@ -402,7 +402,10 @@ class LoanAssistantAgent:
                         }
                     }
                 },
-                "temperature": 0.1,
+                "generation_config": {
+                    "temperature": 0.1,
+                    "candidate_count": 1,
+                },
                 "system_instruction": {
                     "parts": [{"text": self.instruction}]
                 },
@@ -458,17 +461,23 @@ class LoanAssistantAgent:
     
     async def send_text_to_live_api(self, text: str):
         """
-        Send a text message to Live API to trigger bot's response.
-        Used for initial greeting when connection is established.
+        Send a text message to Live API via send_client_content (turn-based).
+        Using send_client_content instead of send_realtime_input to avoid
+        double responses — realtime_input treats text as concurrent speech input.
         """
         if not self.live_session:
             print("⚠️ Live session not ready, cannot send text")
             return
         
         try:
-            # Send text message to trigger bot's response
-            await self.live_session.send_realtime_input(text=text)
-            print(f"📤 Sent text to Live API: '{text}'")
+            from google.genai import types as genai_types
+            await self.live_session.send_client_content(
+                turns=genai_types.Content(
+                    role="user",
+                    parts=[genai_types.Part(text=text)]
+                )
+            )
+            print(f"📤 Sent text to Live API via client_content: '{text}'")
         except Exception as e:
             print(f"❌ Error sending text to Live API: {e}")
             import traceback

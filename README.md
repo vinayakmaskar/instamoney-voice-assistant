@@ -6,11 +6,11 @@ InstaMoney is a real-time, multilingual voice assistant that helps users fill ou
 
 Built with the **Google Gemini Live API** for streaming bi-directional audio, **Django Channels** for WebSocket communication, and a **React Native (Expo)** frontend with a modern glassmorphism UI.
 
----
+### Live Demo
 
-## Demo
+**Try it now:** [https://voice-chatbot-backend-7uucccu35q-el.a.run.app](https://voice-chatbot-backend-7uucccu35q-el.a.run.app)
 
-> **[Demo Video Link]** *(coming soon)*
+Hosted on **Google Cloud Run** (Mumbai region). Click the microphone button and start speaking.
 
 ---
 
@@ -149,6 +149,12 @@ voice_chatbot2/
 ├── manage.py               # Django management
 ├── requirements.txt        # Python dependencies
 ├── secrets.json.example    # Template for secrets (copy to secrets.json)
+├── Dockerfile              # Production container (Python 3.11 + Daphne)
+├── deploy.sh               # Automated GCP Cloud Run deployment script
+├── .gcloudignore           # Cloud Build file inclusion overrides
+├── .dockerignore           # Docker build exclusions
+├── architecture_diagram.html # Interactive system architecture diagram
+├── BLOG_POST.md            # Project write-up for hackathon submission
 ├── quick_start.sh          # One-command server startup
 └── start_servers.sh        # Production server startup script
 ```
@@ -244,7 +250,11 @@ Gemini's audio response streams back through the same pipeline → Backend sends
 | Service | Usage |
 |---------|-------|
 | **Gemini Live API** | Core AI — real-time streaming speech-to-speech with function calling |
-| **Google GenAI SDK** | Client library for Gemini API access |
+| **Google GenAI SDK** | Client library for Gemini API access (`google-genai`) |
+| **Cloud Run** | Hosts backend (Daphne ASGI) + serves frontend — WebSocket-enabled, auto-scaling |
+| **Cloud Build** | Builds Docker images from source on push |
+| **Secret Manager** | Stores `secrets.json` (API keys, JWT keys) securely, mounted at runtime |
+| **Container Registry** | Stores built Docker images |
 
 ---
 
@@ -287,51 +297,62 @@ Copy `secrets.json.example` to `secrets.json` and fill in:
 
 ---
 
-## Cloud Run Deployment
+## Cloud Run Deployment (Automated)
 
-The backend is designed to deploy on **Google Cloud Run** with a single command.
+The entire application is deployed to **Google Cloud Run** using the included `deploy.sh` script — infrastructure-as-code for fully automated deployment.
+
+**Live URL:** [https://voice-chatbot-backend-7uucccu35q-el.a.run.app](https://voice-chatbot-backend-7uucccu35q-el.a.run.app)
+
+**WebSocket:** `wss://voice-chatbot-backend-7uucccu35q-el.a.run.app/ws/voice-chat/?stage=basic_details`
 
 ### Prerequisites
 
 - [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) (`gcloud` CLI)
-- Docker (for local builds, optional — Cloud Build handles remote builds)
 - A GCP project with billing enabled
 
-### Deploy
+### Deploy (single command)
 
 ```bash
 # Authenticate with GCP
 gcloud auth login
 gcloud config set project YOUR_PROJECT_ID
 
-# Run the deployment script
+# Build frontend
+cd frontend && npx expo export --platform web && cd ..
+
+# Run the automated deployment script
 ./deploy.sh
 ```
 
-The script will:
-1. Enable required GCP APIs (Cloud Run, Container Registry, Cloud Build, Secret Manager)
-2. Upload `secrets.json` to Secret Manager
-3. Build the Docker container via Cloud Build
-4. Deploy to Cloud Run with WebSocket support (Daphne ASGI server)
-5. Print the live backend URL and WebSocket endpoint
+### What `deploy.sh` does
 
-### What gets deployed
+1. Enables required GCP APIs (Cloud Run, Container Registry, Cloud Build, Secret Manager)
+2. Uploads `secrets.json` to Secret Manager as `app-secrets`
+3. Builds the Docker container via **Cloud Build** (no local Docker needed)
+4. Deploys to **Cloud Run** with WebSocket support (Daphne ASGI)
+5. Mounts secrets securely at `/secrets/secrets.json`
+6. Prints the live URL and WebSocket endpoint
+
+### Deployment architecture
 
 | Component | Detail |
 |-----------|--------|
-| **Container** | Python 3.11-slim + Daphne on port 8080 |
-| **Secrets** | `secrets.json` mounted via Secret Manager |
+| **Container** | `python:3.11-slim` + Daphne ASGI on port 8080 |
+| **Frontend** | Expo web build served from Django at `/` |
+| **Secrets** | Mounted from Secret Manager (never in container image) |
 | **Scaling** | 0–3 instances, 512 MB RAM, 1 vCPU |
 | **Region** | `asia-south1` (Mumbai) |
 | **WebSockets** | Fully supported on Cloud Run (300s timeout) |
+| **Auth** | Public access (`--allow-unauthenticated`) |
 
-### Update the frontend
+### Deployment files in this repo
 
-After deployment, update the WebSocket URL in `frontend/src/components/VoiceChatbot.js`:
-
-```javascript
-const WS_URL = 'wss://YOUR-SERVICE-URL.run.app/ws/voice-chat/';
-```
+| File | Purpose |
+|------|---------|
+| `deploy.sh` | Automated Cloud Run deployment script |
+| `Dockerfile` | Production container definition |
+| `.gcloudignore` | Controls which files are sent to Cloud Build |
+| `.dockerignore` | Controls which files go into the Docker image |
 
 ---
 
