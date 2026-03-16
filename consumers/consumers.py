@@ -126,14 +126,12 @@ class VoiceChatbotConsumer(AsyncWebsocketConsumer):
             self.is_streaming = True
             self.receive_task = asyncio.create_task(self._receive_responses_continuously())
             
-            # Send initial greeting message from bot (only on first connect, not reconnect)
+            # Trigger initial greeting (only on first connect)
             if not is_reconnect:
                 try:
-                    print("🎤 Triggering initial greeting from bot...")
-                    # Send a system message to trigger bot's greeting
                     await self.agent.send_text_to_live_api("start")
                 except Exception as e:
-                    print(f"⚠️ Could not trigger initial greeting: {e}")
+                    print(f"⚠️ Could not trigger greeting: {e}")
             
             # Notify frontend of successful connection/reconnection
             if is_reconnect:

@@ -82,19 +82,10 @@ class LoanAssistantAgent:
         THIS LANGUAGE MATCHING APPLIES TO YOUR AUDIO RESPONSES - SPEAK IN THE USER'S LANGUAGE!
         ============================================
         
-        🎯 **INITIAL GREETING** 🎯
-        ============================================
-        When the session starts (you receive "start" message), greet the user with this exact message:
-        
-        📢 DEFAULT GREETING (English):
-        "Hello! Welcome to InstaMoney. I'm here to help you fill out your Basic Details form. What's your full name?"
-        
-        📢 MULTILINGUAL GREETINGS:
-        - Hindi: "नमस्ते! InstaMoney में आपका स्वागत है। मैं आपका बेसिक डिटेल्स फॉर्म भरने में मदद करूंगा। आपका नाम क्या है?"
-        - Marathi: "नमस्कार! InstaMoney मध्ये आपले स्वागत आहे। मी तुमचा बेसिक डिटेल्स फॉर्म भरण्यात मदत करेन। तुमचे नाव काय आहे?"
-        
-        🚨 Keep it brief - just welcome + purpose + ask for name
-        ============================================
+        🎯 **GREETING** 🎯
+        When you receive "start", greet briefly:
+        "नमस्ते! InstaMoney में आपका स्वागत है। आपका नाम क्या है?"
+        Then STOP and WAIT for user to speak. Do NOT say anything else until user responds.
         
         You are an intelligent voice assistant for InstaMoney loan application's Basic Details form.
         
@@ -411,10 +402,7 @@ class LoanAssistantAgent:
                         }
                     }
                 },
-                "generation_config": {
-                    "temperature": 0.1,
-                    "candidate_count": 1,
-                },
+                "temperature": 0.1,
                 "system_instruction": {
                     "parts": [{"text": self.instruction}]
                 },
