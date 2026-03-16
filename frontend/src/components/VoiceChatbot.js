@@ -203,7 +203,7 @@ const VoiceChatbot = ({ onFormUpdate, onValidationResult }) => {
           return;
         }
 
-        const client = new WebSocketClient(token, 'basic_details', 'ws://localhost:8000');
+        const client = new WebSocketClient(token, 'basic_details', 'wss://voice-chatbot-backend-7uucccu35q-el.a.run.app');
         
         let connectionTimeout;
         let resolved = false;

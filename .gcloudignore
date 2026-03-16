@@ -1,0 +1,5 @@
+#!include:.gitignore
+
+# Override: include frontend dist for Cloud Run serving
+!frontend/dist/
+!frontend/dist/**

@@ -10,8 +10,15 @@ venv/
 env/
 .venv/
 
-# Frontend (deployed separately)
-frontend/
+# Frontend (only keep dist/)
+frontend/node_modules/
+frontend/.expo/
+frontend/src/
+frontend/App.js
+frontend/app.json
+frontend/babel.config.js
+frontend/package.json
+frontend/package-lock.json
 
 # IDE
 .idea/

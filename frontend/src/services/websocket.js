@@ -2,7 +2,7 @@
  * WebSocket client for voice chatbot with subprotocol authentication.
  */
 class WebSocketClient {
-  constructor(token, stage, baseUrl = 'ws://localhost:8000') {
+  constructor(token, stage, baseUrl = 'wss://voice-chatbot-backend-7uucccu35q-el.a.run.app') {
     this.token = token;
     this.stage = stage;
     this.baseUrl = baseUrl;
