@@ -1,0 +1,118 @@
+# ===========================
+# Python
+# ===========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ===========================
+# Virtual Environment
+# ===========================
+venv/
+env/
+ENV/
+.venv/
+
+# ===========================
+# Django
+# ===========================
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/media
+/staticfiles
+
+# ===========================
+# Secrets & Credentials
+# ===========================
+secrets.json
+.env
+.env.local
+.env.production
+
+# ===========================
+# IDE & Editor
+# ===========================
+.vscode/
+.idea/
+.cursor/
+*.swp
+*.swo
+*~
+
+# ===========================
+# OS Files
+# ===========================
+.DS_Store
+Thumbs.db
+
+# ===========================
+# Node / Frontend
+# ===========================
+node_modules/
+frontend/node_modules/
+frontend/.expo/
+.expo/
+
+# ===========================
+# Testing & Logs
+# ===========================
+.pytest_cache/
+.coverage
+htmlcov/
+test_output.log
+frontend.log
+
+# ===========================
+# Dev Notes (internal only)
+# ===========================
+ANALYSIS_*.md
+BARGE_IN_*.md
+COMPREHENSIVE_TEST_PLAN.md
+DYNAMIC_LANGUAGE_SWITCHING.md
+FINAL_PROMPT_UPDATE.md
+FIXES_IMPLEMENTED_*.md
+FORM_FILL_FIXES.md
+FRONTEND_URLS.md
+GREETING_*.md
+IMPLEMENTATION_STATUS.md
+INITIAL_GREETING_IMPLEMENTED.md
+ISSUES_FIXED.md
+ISSUE_ANALYSIS_*.md
+LANGUAGE_*.md
+LATENCY_OPTIMIZATION.md
+MANUAL_TEST_GUIDE.md
+OPTIMIZATION_SUMMARY.md
+PROMPT_*.md
+QUICK_TEST.md
+README_SETUP.md
+REVERTED_*.md
+SERVER_STATUS.md
+SETUP.md
+TEMPERATURE_*.md
+TESTING_*.md
+TEST_RESULTS.md
+database_export.txt
+
+# ===========================
+# Backups (internal only)
+# ===========================
+backups/

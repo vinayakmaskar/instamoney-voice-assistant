@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Chatbot WebSocket Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #6B46C1;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        button {
+            background: #6B46C1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #553c9a;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 300px;
+            margin: 5px;
+        }
+        .messages {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .message {
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .message.user {
+            background: #e3f2fd;
+            text-align: right;
+        }
+        .message.bot {
+            background: #f1f8e9;
+        }
+        .message.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .test-result.pass {
+            background: #d4edda;
+            color: #155724;
+        }
+        .test-result.fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Voice Chatbot WebSocket Test Suite</h1>
+        
+        <div id="status" class="status disconnected">
+            ❌ Disconnected
+        </div>
+        
+        <div>
+            <label>JWT Token:</label><br>
+            <input type="text" id="tokenInput" placeholder="Enter JWT token" style="width: 500px;">
+            <button onclick="connect()">Connect</button>
+            <button onclick="disconnect()">Disconnect</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>📨 Messages</h2>
+        <div id="messages" class="messages"></div>
+        <div style="margin-top: 10px;">
+            <input type="text" id="messageInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendMessage()">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>🧪 Automated Tests</h2>
+        
+        <div class="test-section">
+            <h3>Test 1: Basic Text Message</h3>
+            <button onclick="testBasicMessage()">Run Test</button>
+            <div id="test1-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 2: PAN Validation (Valid)</h3>
+            <button onclick="testValidPAN()">Run Test</button>
+            <div id="test2-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 3: PAN Validation (Invalid)</h3>
+            <button onclick="testInvalidPAN()">Run Test</button>
+            <div id="test3-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 4: DOB Validation (Valid)</h3>
+            <button onclick="testValidDOB()">Run Test</button>
+            <div id="test4-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 5: DOB Validation (Underage)</h3>
+            <button onclick="testUnderageDOB()">Run Test</button>
+            <div id="test5-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 6: States List</h3>
+            <button onclick="testStatesList()">Run Test</button>
+            <div id="test6-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 7: Off-topic Question</h3>
+            <button onclick="testOffTopic()">Run Test</button>
+            <div id="test7-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 8: Heartbeat</h3>
+            <button onclick="testHeartbeat()">Run Test</button>
+            <div id="test8-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Run All Tests</h3>
+            <button onclick="runAllTests()">Run All Tests</button>
+            <div id="all-tests-result"></div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let testResults = [];
+
+        function updateStatus(connected) {
+            const statusEl = document.getElementById('status');
+            if (connected) {
+                statusEl.className = 'status connected';
+                statusEl.textContent = '✅ Connected';
+            } else {
+                statusEl.className = 'status disconnected';
+                statusEl.textContent = '❌ Disconnected';
+            }
+        }
+
+        function addMessage(text, type = 'bot') {
+            const messagesEl = document.getElementById('messages');
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${type}`;
+            messageEl.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+            messagesEl.appendChild(messageEl);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function connect() {
+            const token = document.getElementById('tokenInput').value;
+            if (!token) {
+                alert('Please enter a JWT token');
+                return;
+            }
+
+            const uri = 'ws://localhost:8000/ws/voice-chat/?stage=basic_details';
+            ws = new WebSocket(uri, [token]);
+
+            ws.onopen = () => {
+                updateStatus(true);
+                addMessage('Connected to voice chatbot!', 'bot');
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                console.log('Received:', data);
+                
+                if (data.type === 'connection_established') {
+                    addMessage(`✅ ${data.message}`, 'bot');
+                } else if (data.type === 'response_text') {
+                    addMessage(data.text, 'bot');
+                } else if (data.type === 'form_suggestion') {
+                    addMessage(`💡 Auto-fill: ${data.field} = ${data.value}`, 'bot');
+                } else if (data.type === 'validation_result') {
+                    const icon = data.valid ? '✅' : '❌';
+                    addMessage(`${icon} ${data.message}`, data.valid ? 'bot' : 'error');
+                } else if (data.type === 'tool_result') {
+                    addMessage(data.text, 'bot');
+                } else if (data.type === 'pong') {
+                    addMessage('🏓 Pong received', 'bot');
+                } else if (data.type === 'error') {
+                    addMessage(`❌ Error: ${data.message}`, 'error');
+                } else {
+                    addMessage(JSON.stringify(data), 'bot');
+                }
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                addMessage('❌ Connection error', 'error');
+            };
+
+            ws.onclose = (event) => {
+                updateStatus(false);
+                addMessage(`Disconnected: ${event.code} ${event.reason}`, 'error');
+            };
+        }
+
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+            ws.send(JSON.stringify({
+                type: 'text_message',
+                text: text
+            }));
+
+            addMessage(text, 'user');
+            input.value = '';
+        }
+
+        function showTestResult(testId, passed, message) {
+            const resultEl = document.getElementById(testId);
+            resultEl.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            resultEl.textContent = `${passed ? '✅' : '❌'} ${message}`;
+        }
+
+        async function waitForResponse(timeout = 5000) {
+            return new Promise((resolve) => {
+                const originalOnMessage = ws.onmessage;
+                const timer = setTimeout(() => {
+                    ws.onmessage = originalOnMessage;
+                    resolve(null);
+                }, timeout);
+
+                ws.onmessage = (event) => {
+                    clearTimeout(timer);
+                    ws.onmessage = originalOnMessage;
+                    const data = JSON.parse(event.data);
+                    resolve(data);
+                };
+            });
+        }
+
+        async function testBasicMessage() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                showTestResult('test1-result', false, 'Not connected');
+                return;
+            }
+
+            ws.send(JSON.stringify({
+                type: 'text_message',
+                text: 'Hello, I need help with the form'
+            }));
+
+            const response = await waitForResponse();
+            const passed = response && response.type === 'response_text';
+            showTestResult('test1-result', passed, passed ? 'Response received' : 'No response');
+        }
+
+        async function testValidPAN() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                showTestResult('test2-result', false, 'Not connected');
+                return;
+            }
+
+            ws.send(JSON.stringify({
+                type: 'text_message',
+                text: 'My PAN number is ABCDE1234F'
+            }));
+
+            let formSuggestion = false;
+            for (let i = 0; i < 5; i++) {
+                const response = await waitForResponse();
+                if (response && response.type === 'form_suggestion' && response.field === 'panNumber') {
+                    formSuggestion = true;
+                    break;
+                }
+            }
+
+            showTestResult('test2-result', formSuggestion, 
+                formSuggestion ? 'PAN validated and form suggested' : 'No form suggestion');
+        }
+
+        async function testInvalidPAN() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                showTestResult('test3-result', false, 'Not connected');
+                return;
+            }
+
+            ws.send(JSON.stringify({
+                type: 'text_message',
+                text: 'My PAN is 12345'
+            }));
+
+            const response = await waitForResponse();
+            const passed = response && (
+                response.type === 'validation_result' && !response.valid ||
+                response.text && response.text.toLowerCase().includes('invalid')
+            );
+            showTestResult('test3-result', passed, passed ? 'Invalid PAN rejected' : 'Test failed');
+        }
+
+        async function testValidDOB() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                showTestResult('test4-result', false, 'Not connected');
+                return;
+            }
+
+            const dob = new Date();
+            dob.setFullYear(dob.getFullYear() - 25);
+            const dobStr = dob.toLocaleDateString('en-GB').replace(/\//g, '/');
+
+            ws.send(JSON.stringify({
+                type: 'text_message',
+                text: `My date of birth is ${dobStr}`
+            }));
+
+            let formSuggestion = false;
+            for (let i = 0; i < 5; i++) {
+                const response = await waitForResponse();
+                if (response && response.type === 'form_suggestion' && response.field === 'dateOfBirth') {
+                    formSuggestion = true;
+                    break;
+                }
+            }
+
+            showTestResult('test4-result', formSuggestion,
+                formSuggestion ? 'DOB validated and form suggested' : 'No form suggestion');
+        }
+
+        async function testUnderageDOB() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                showTestResult('test5-result', false, 'Not connected');
+                return;
+            }
+
+            const dob = new Date();
+            dob.setFullYear(dob.getFullYear() - 16);
+            const dobStr = dob.toLocaleDateString('en-GB').replace(/\//g, '/');
+
+            ws.send(JSON.stringify({
+                type: 'text_message',
+                text: `My date of birth is ${dobStr}`
+            }));
+
+            const response = await waitForResponse();
+            const passed = response && (
+                response.type === 'validation_result' && !response.valid ||
+                response.text && (response.text.includes('18') || response.text.toLowerCase().includes('age'))
+            );
+            showTestResult('test5-result', passed, passed ? 'Underage DOB rejected' : 'Test failed');
+        }
+
+        async function testStatesList() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                showTestResult('test6-result', false, 'Not connected');
+                return;
+            }
+
+            ws.send(JSON.stringify({
+                type: 'text_message',
+                text: 'What are the Indian states?'
+            }));
+
+            const response = await waitForResponse();
+            const passed = response && response.text && (
+                response.text.toLowerCase().includes('state') ||
+                response.text.toLowerCase().includes('maharashtra')
+            );
+            showTestResult('test6-result', passed, passed ? 'States list provided' : 'No states list');
+        }
+
+        async function testOffTopic() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                showTestResult('test7-result', false, 'Not connected');
+                return;
+            }
+
+            ws.send(JSON.stringify({
+                type: 'text_message',
+                text: 'What is my loan amount?'
+            }));
+
+            const response = await waitForResponse();
+            const passed = response && response.text && (
+                response.text.toLowerCase().includes('basic details') ||
+                response.text.toLowerCase().includes('form')
+            );
+            showTestResult('test7-result', passed, passed ? 'Off-topic redirected' : 'Not redirected');
+        }
+
+        async function testHeartbeat() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                showTestResult('test8-result', false, 'Not connected');
+                return;
+            }
+
+            ws.send(JSON.stringify({
+                type: 'ping'
+            }));
+
+            const response = await waitForResponse();
+            const passed = response && response.type === 'pong';
+            showTestResult('test8-result', passed, passed ? 'Pong received' : 'No pong');
+        }
+
+        async function runAllTests() {
+            const resultEl = document.getElementById('all-tests-result');
+            resultEl.textContent = 'Running all tests...';
+            
+            await testBasicMessage();
+            await new Promise(r => setTimeout(r, 1000));
+            await testValidPAN();
+            await new Promise(r => setTimeout(r, 1000));
+            await testInvalidPAN();
+            await new Promise(r => setTimeout(r, 1000));
+            await testValidDOB();
+            await new Promise(r => setTimeout(r, 1000));
+            await testUnderageDOB();
+            await new Promise(r => setTimeout(r, 1000));
+            await testStatesList();
+            await new Promise(r => setTimeout(r, 1000));
+            await testOffTopic();
+            await new Promise(r => setTimeout(r, 1000));
+            await testHeartbeat();
+            
+            resultEl.textContent = '✅ All tests completed! Check individual test results above.';
+        }
+    </script>
+</body>
+</html>
+

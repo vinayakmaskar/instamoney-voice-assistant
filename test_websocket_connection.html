@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+</head>
+<body>
+    <h1>WebSocket Connection Test</h1>
+    <button id="testBtn">Test Connection</button>
+    <div id="output"></div>
+    
+    <script>
+        const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMSIsImV4cCI6MTc2NzUyODI4MywiaWF0IjoxNzY3NDQxODgzfQ.DWg1AGDklTGs_NtMyGQYGNQYutl_DxUIE_OkzTG85Zs';
+        const wsUrl = 'ws://localhost:8000/ws/voice-chat/?stage=basic_details';
+        
+        document.getElementById('testBtn').addEventListener('click', () => {
+            const output = document.getElementById('output');
+            output.innerHTML = '<p>Connecting...</p>';
+            
+            console.log('Connecting to:', wsUrl);
+            const ws = new WebSocket(wsUrl, [token]);
+            
+            ws.onopen = () => {
+                console.log('✅ Connected!');
+                output.innerHTML += '<p style="color:green">✅ Connected!</p>';
+            };
+            
+            ws.onmessage = (event) => {
+                console.log('Message:', event.data);
+                const data = JSON.parse(event.data);
+                output.innerHTML += '<p>Message: ' + JSON.stringify(data) + '</p>';
+            };
+            
+            ws.onerror = (error) => {
+                console.error('Error:', error);
+                output.innerHTML += '<p style="color:red">❌ Error: ' + error + '</p>';
+            };
+            
+            ws.onclose = (event) => {
+                console.log('Closed:', event.code, event.reason);
+                output.innerHTML += '<p>Closed: ' + event.code + ' - ' + (event.reason || 'No reason') + '</p>';
+            };
+        });
+    </script>
+</body>
+</html>
