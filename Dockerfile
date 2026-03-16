@@ -18,6 +18,7 @@ COPY . .
 RUN ls -la voice_chatbot/ && python -c "import voice_chatbot.asgi"
 RUN python manage.py collectstatic --noinput 2>/dev/null || true
 RUN python manage.py migrate --noinput 2>/dev/null || true
+RUN DJANGO_SETTINGS_MODULE=voice_chatbot.settings python -c "import django; django.setup(); from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_user(username='testuser', password='testpass123', email='test@test.com') if not User.objects.filter(id=1).exists() else print('exists')"
 
 EXPOSE 8080
 
